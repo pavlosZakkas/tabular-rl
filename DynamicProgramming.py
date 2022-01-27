@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Practical for course 'Reinforcement Learning',
-Leiden University, The Netherlands
-2022
-By Thomas Moerland
-"""
 
 import numpy as np
 from Environment import StochasticWindyGridworld
@@ -20,11 +14,9 @@ class QValueIterationAgent:
         self.gamma = gamma
         self.Q_sa = np.zeros((n_states,n_actions))
         
-    def select_action(self, s):
+    def select_action(self, state):
         ''' Returns the greedy best action in state s ''' 
-        # TO DO: Add own code
-        a = np.random.randint(0,self.n_actions) # Replace this with correct action selection
-        return a
+        return np.argmax(self.Q_sa[state])
         
     def update(self,s,a,p_sas,r_sas):
         ''' Function updates Q(s,a) using p_sas and r_sas '''
