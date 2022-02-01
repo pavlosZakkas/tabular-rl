@@ -18,9 +18,20 @@ class QValueIterationAgent:
         ''' Returns the greedy best action in state s ''' 
         return np.argmax(self.Q_sa[state])
         
-    def update(self,s,a,p_sas,r_sas):
-        ''' Function updates Q(s,a) using p_sas and r_sas '''
-        # TO DO: Add own code
+    def update(self, state, action, prob_sas, reward_sas):
+        # p_sas = np.zeros((self.n_states, self.n_actions, self.n_states))
+        # r_sas = np.zeros((self.n_states, self.n_actions, self.n_states)) + self.reward_per_step 
+        states_probs = prob_sas[state][action]
+        states_rewards = reward_sas[state][action]
+        
+        updated_Q_sa = np.sum(np.multiply(
+            states_probs, 
+            np.add(
+                states_rewards,
+                [self.gamma * self.Q_sa[s][self.select_action(s)] for s in range(self.n_states)]
+            )
+        ))
+        self.Q_sa[state][action] = updated_Q_sa
         pass
     
     
