@@ -39,14 +39,24 @@ class QValueIterationAgent:
 def Q_value_iteration(env, gamma=1.0, threshold=0.001):
     ''' Runs Q-value iteration. Returns a converged QValueIterationAgent object '''
     
-    QIagent = QValueIterationAgent(env.n_states, env.n_actions, gamma)    
+    QIagent = QValueIterationAgent(env.n_states, env.n_actions, gamma)
         
     # TO DO: IMPLEMENT Q-VALUE ITERATION HERE
-        
-    # Plot current Q-value estimates & print max error
-    # env.render(Q_sa=QIagent.Q_sa,plot_optimal_policy=True,step_pause=0.2)
-    # print("Q-value iteration, iteration {}, max error {}".format(i,max_error))
-     
+    
+    iteration = 1
+    delta = threshold
+    while delta >= threshold:
+        delta = 0
+        for state in range(QIagent.n_states):
+            for action in range(QIagent.n_actions):
+                initial_value = QIagent.Q_sa[state][action]
+                QIagent.update(state, action, env.p_sas, env.r_sas)
+                delta = max(delta, np.abs(initial_value - QIagent.Q_sa[state][action]))
+
+        env.render(Q_sa=QIagent.Q_sa,plot_optimal_policy=True,step_pause=0.2)
+        print(f"Q-value iteration, iteration {iteration}, max error {delta}")
+        iteration += 1
+
     return QIagent
 
 def experiment():
@@ -54,7 +64,7 @@ def experiment():
     threshold = 0.001
     env = StochasticWindyGridworld(initialize_model=True)
     env.render()
-    QIagent = Q_value_iteration(env,gamma,threshold)
+    QIagent = Q_value_iteration(env, gamma, threshold)
     
     # View optimal policy
     done = False
