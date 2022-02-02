@@ -47,8 +47,8 @@ def smooth(y, window, poly=1):
 
 def softmax(x, temp):
     ''' Computes the softmax of vector x with temperature parameter 'temp' '''
-    x = x / temp # scale by temperature
-    z = x - max(x) # substract max to prevent overflow of softmax 
+    x = np.array(x) / temp # scale by temperature
+    z = x - np.max(x) # substract max to prevent overflow of softmax
     return np.exp(z)/np.sum(np.exp(z)) # compute softmax
 
 def argmax(x):
