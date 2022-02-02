@@ -107,3 +107,25 @@ class QLearningSpec(unittest.TestCase):
 
     # then
     self.assertEqual(selected_action, self.ACTION_2)
+
+  def should_update_Q_table_based_on_one_step_Q_learning_update(self):
+
+    # given
+    agent = QLearningAgent(self.STATES, self.ACTIONS, self.LEARNING_RATE, self.GAMMA)
+    agent.Q_sa = [
+      self.STATE_VALUES_1.copy(),
+      self.STATE_VALUES_2.copy(),
+      self.STATE_VALUES_3.copy(),
+    ]
+    reward = 10.0
+
+    # when
+    agent.update(self.STATE_1, self.ACTION_2, reward, self.STATE_2, None)
+
+    # then
+    updated_Q_value = 3 + self.LEARNING_RATE * ((reward + self.GAMMA * 11) - 3)
+    assert agent.Q_sa == [
+      [0, updated_Q_value, 5],
+      self.STATE_VALUES_2,
+      self.STATE_VALUES_3
+    ]

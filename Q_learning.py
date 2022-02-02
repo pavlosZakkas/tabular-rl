@@ -48,8 +48,9 @@ class QLearningAgent:
             
         return action
         
-    def update(self,s,a,r,s_next,done):
-        # TO DO: Add own code
+    def update(self, state, action, reward, next_state, done):
+        back_up_estimate = reward + self.gamma * max(self.Q_sa[next_state])
+        self.Q_sa[state][action] += self.learning_rate * (back_up_estimate - self.Q_sa[state][action])
         pass
 
 def q_learning(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None, temp=None, plot=True):
