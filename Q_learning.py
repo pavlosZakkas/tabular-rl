@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Practical for course 'Reinforcement Learning',
-Leiden University, The Netherlands
-2021
-By Thomas Moerland
-"""
 
 import numpy as np
 from Environment import StochasticWindyGridworld
 from Helper import softmax, argmax
+
+from enum import Enum
+
+class ActionSelection(Enum):
+    E_GREEDY = 'egreedy'
+    BOLTZMANN = 'softmax'
 
 class QLearningAgent:
 
@@ -19,25 +19,34 @@ class QLearningAgent:
         self.learning_rate = learning_rate
         self.gamma = gamma
         self.Q_sa = np.zeros((n_states,n_actions))
+
+    def random_action_to_be_selected(self, epsilon):
+        return False if np.random.uniform(0, 1) > epsilon else True
+
+    def random_action(self):
+        return np.random.randint(0, self.n_actions)
+
+    def highest_valued_action_from(self, state):
+        return argmax(self.Q_sa[state])
+
+    def select_action(self, state, policy=ActionSelection.E_GREEDY.value, epsilon=None, temp=None):
         
-    def select_action(self, s, policy='egreedy', epsilon=None, temp=None):
-        
-        if policy == 'egreedy':
+        if policy == ActionSelection.E_GREEDY:
             if epsilon is None:
                 raise KeyError("Provide an epsilon")
+
+            action = self.random_action() \
+                if self.random_action_to_be_selected(epsilon) \
+                else self.highest_valued_action_from(state)
                 
-            # TO DO: Add own code
-            a = np.random.randint(0,self.n_actions) # Replace this with correct action selection
-            
-                
-        elif policy == 'softmax':
+        elif policy == ActionSelection.BOLTZMANN.value:
             if temp is None:
                 raise KeyError("Provide a temperature")
                 
-            # TO DO: Add own code
-            a = np.random.randint(0,self.n_actions) # Replace this with correct action selection
+            action_probs = softmax(self.Q_sa[state], temp)
+            action = np.random.choice(range(self.n_actions), 1, p=action_probs)[0]
             
-        return a
+        return action
         
     def update(self,s,a,r,s_next,done):
         # TO DO: Add own code
