@@ -46,7 +46,10 @@ class StochasticWindyGridworld:
         self.agent_location = np.array([0,3])
         s = self._location_to_state(self.agent_location)
         return s
-    
+
+    def set_location_from(self, state):
+        self.agent_location = self._state_to_location(state)
+
     def step(self,a):
         ''' Forward the environment based on action a, really affecting the agent location  
         Returns the next state, the obtained reward, and a boolean whether the environment terminated '''

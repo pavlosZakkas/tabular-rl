@@ -31,7 +31,7 @@ class QLearningAgent:
 
     def select_action(self, state, policy=ActionSelection.E_GREEDY.value, epsilon=None, temp=None):
         
-        if policy == ActionSelection.E_GREEDY:
+        if policy == ActionSelection.E_GREEDY.value:
             if epsilon is None:
                 raise KeyError("Provide an epsilon")
 
@@ -51,20 +51,42 @@ class QLearningAgent:
     def update(self, state, action, reward, next_state, done):
         back_up_estimate = reward + self.gamma * max(self.Q_sa[next_state])
         self.Q_sa[state][action] += self.learning_rate * (back_up_estimate - self.Q_sa[state][action])
-        pass
 
-def q_learning(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None, temp=None, plot=True):
+    def a_random_state(self):
+        return np.random.randint(0, self.n_states)
+
+def q_learning(
+  n_timesteps,
+  learning_rate,
+  gamma,
+  policy=ActionSelection.E_GREEDY.value,
+  epsilon=None,
+  temperature=None,
+  plot=True
+):
     ''' runs a single repetition of q_learning
     Return: rewards, a vector with the observed rewards at each timestep ''' 
     
     env = StochasticWindyGridworld(initialize_model=False)
-    pi = QLearningAgent(env.n_states, env.n_actions, learning_rate, gamma)
+    agent = QLearningAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
 
-    # TO DO: Write your Q-learning algorithm here!
-    
-    # if plot:
-    #    env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during Q-learning execution
+    state = agent.a_random_state()
+    env.set_location_from(state)
+
+    for timestep in range(n_timesteps):
+        selected_action = agent.select_action(state, policy, epsilon, temperature)
+        next_state, reward, done = env.step(selected_action)
+        rewards.append(reward)
+        agent.update(state, selected_action, reward, next_state, done)
+        state = next_state
+
+        if plot:
+            env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
+
+        if done:
+            break
+
 
     return rewards 
 
@@ -75,7 +97,7 @@ def test():
     learning_rate = 0.1
 
     # Exploration
-    policy = 'egreedy' # 'egreedy' or 'softmax' 
+    policy = ActionSelection.E_GREEDY.value
     epsilon = 0.1
     temp = 1.0
     
