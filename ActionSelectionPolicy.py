@@ -1,6 +1,6 @@
 import numpy as np
 
-from Helper import argmax, softmax
+from Helper import argmax, softmax, linear_anneal
 
 class ActionSelectionPolicy:
 
@@ -40,4 +40,48 @@ class SoftMaxPolicy(ActionSelectionPolicy):
   def select_action_from(self, state, Q_sa, n_actions):
     action_probs = softmax(Q_sa[state], self.temperature)
     return np.random.choice(range(n_actions), 1, p=action_probs)[0]
+
+class AnnealingEGreedyPolicy(EGreedyPolicy):
+
+  def __init__(self, timesteps, initial_epsilon, final_epsilon, steps_percentage):
+    super().__init__(initial_epsilon)
+    self.timesteps = timesteps
+    self.initial_epsilon = initial_epsilon
+    self.final_epsilon = final_epsilon
+    self.steps_percentage = steps_percentage
+    self.current_timestep = -1
+
+  def select_action_from(self, state, Q_sa, n_actions):
+    self.current_timestep += 1
+    self.epsilon = linear_anneal(
+      self.current_timestep,
+      self.timesteps,
+      self.initial_epsilon,
+      self.final_epsilon,
+      self.steps_percentage,
+    )
+
+    return super().select_action_from(state, Q_sa, n_actions)
+
+class AnnealingSoftMaxPolicy(SoftMaxPolicy):
+
+  def __init__(self, timesteps, initial_temperature, final_temperature, steps_percentage):
+    super().__init__(initial_temperature)
+    self.timesteps = timesteps
+    self.initial_temperature = initial_temperature
+    self.final_temperature = final_temperature
+    self.steps_percentage = steps_percentage
+    self.current_timestep = -1
+
+  def select_action_from(self, state, Q_sa, n_actions):
+    self.current_timestep += 1
+    self.temperature = linear_anneal(
+      self.current_timestep,
+      self.timesteps,
+      self.initial_temperature,
+      self.final_temperature,
+      self.steps_percentage,
+    )
+
+    return super().select_action_from(state, Q_sa, n_actions)
 

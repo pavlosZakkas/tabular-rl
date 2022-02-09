@@ -3,7 +3,8 @@
 
 import numpy as np
 
-from ActionSelectionPolicy import ActionSelectionPolicy, EGreedyPolicy, SoftMaxPolicy
+from ActionSelectionPolicy import ActionSelectionPolicy, EGreedyPolicy, SoftMaxPolicy, AnnealingEGreedyPolicy, \
+    AnnealingSoftMaxPolicy
 from Environment import StochasticWindyGridworld
 
 class QLearningAgent:
@@ -17,7 +18,7 @@ class QLearningAgent:
 
     def select_action(self, state, policy: ActionSelectionPolicy):
         return policy.select_action_from(state, self.Q_sa, self.n_actions)
-        
+
     def update(self, state, action, reward, next_state, done):
         back_up_estimate = reward + self.gamma * max(self.Q_sa[next_state])
         self.Q_sa[state][action] += self.learning_rate * (back_up_estimate - self.Q_sa[state][action])
@@ -33,8 +34,8 @@ def q_learning(
   plot=True
 ):
     ''' runs a single repetition of q_learning
-    Return: rewards, a vector with the observed rewards at each timestep ''' 
-    
+    Return: rewards, a vector with the observed rewards at each timestep '''
+
     env = StochasticWindyGridworld(initialize_model=False)
     agent = QLearningAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
@@ -56,18 +57,29 @@ def q_learning(
             break
 
 
-    return rewards 
+    return rewards
 
 def test():
-    
+
     n_timesteps = 1000
     gamma = 1.0
     learning_rate = 0.1
 
     # Exploration
-    policy = EGreedyPolicy(epsilon=0.1)
+    # policy = EGreedyPolicy(epsilon=0.1)
+    policy = AnnealingEGreedyPolicy(
+        timesteps=n_timesteps,
+        initial_epsilon=0.9,
+        final_epsilon=0.001,
+        steps_percentage=0.9
+    )
     # policy = SoftMaxPolicy(temperature=1.0)
-
+    # policy = AnnealingSoftMaxPolicy(
+    #     timesteps=n_timesteps,
+    #     initial_temperature=10,
+    #     final_temperature=0.001,
+    #     steps_percentage=0.9
+    # )
     # Plotting parameters
     plot = True
 
