@@ -4,7 +4,8 @@ import numpy as np
 import mock
 from mock import Mock
 
-from Q_learning import QLearningAgent, ActionSelection, q_learning
+from ActionSelectionPolicy import EGreedyPolicy, SoftMaxPolicy
+from Q_learning import QLearningAgent, q_learning
 
 class QLearningSpec(unittest.TestCase):
   STATES = 3
@@ -47,7 +48,7 @@ class QLearningSpec(unittest.TestCase):
     (STATE_2, ACTION_2),
     (STATE_3, ACTION_1),
   ])
-  @mock.patch('Q_learning.np')
+  @mock.patch('ActionSelectionPolicy.np')
   def should_select_the_highest_valued_action_for_egreedy_policy_if_the_sampled_selection_probability_is_greater_than_epsilon(
     self,
     state,
@@ -64,12 +65,12 @@ class QLearningSpec(unittest.TestCase):
 
     mocked_numpy.random.uniform.return_value = self.EPSILON + 0.05
     # when
-    selected_action = agent.select_action(state, ActionSelection.E_GREEDY.value, self.EPSILON)
+    selected_action = agent.select_action(state, EGreedyPolicy(self.EPSILON))
 
     # then
     self.assertEqual(selected_action, action)
 
-  @mock.patch('Q_learning.np')
+  @mock.patch('ActionSelectionPolicy.np')
   def should_select_a_random_action_for_egreedy_policy_if_the_sampled_selection_probability_is_smaller_than_epsilon(
     self,
     mocked_numpy
@@ -86,12 +87,12 @@ class QLearningSpec(unittest.TestCase):
     mocked_numpy.random.randint.return_value = self.ACTION_2
 
     # when
-    selected_action = agent.select_action(self.STATE_1, ActionSelection.E_GREEDY.value, self.EPSILON)
+    selected_action = agent.select_action(self.STATE_1, EGreedyPolicy(self.EPSILON))
 
     # then
     self.assertEqual(selected_action, self.ACTION_2)
 
-  @mock.patch('Q_learning.np')
+  @mock.patch('ActionSelectionPolicy.np')
   def should_select_an_action_for_boltzmann_policy_based_on_softmax_of_actions(self, mocked_numpy):
     # given
     agent = QLearningAgent(self.STATES, self.ACTIONS, self.LEARNING_RATE, self.GAMMA)
@@ -109,7 +110,7 @@ class QLearningSpec(unittest.TestCase):
 
     mocked_numpy.random.choice.side_effect = chosen_action
     # when
-    selected_action = agent.select_action(self.STATE_1, ActionSelection.BOLTZMANN.value, temp=self.TEMPERATURE)
+    selected_action = agent.select_action(self.STATE_1, SoftMaxPolicy(self.TEMPERATURE))
 
     # then
     self.assertEqual(selected_action, self.ACTION_2)
@@ -153,8 +154,7 @@ class QLearningSpec(unittest.TestCase):
       self.TIMESTEPS,
       self.LEARNING_RATE,
       self.GAMMA,
-      ActionSelection.E_GREEDY.value,
-      epsilon=0.05,
+      policy=EGreedyPolicy(epsilon=self.EPSILON),
       plot=False,
     )
 
@@ -200,8 +200,7 @@ class QLearningSpec(unittest.TestCase):
       self.TIMESTEPS,
       self.LEARNING_RATE,
       self.GAMMA,
-      ActionSelection.E_GREEDY.value,
-      epsilon=0.05,
+      policy=EGreedyPolicy(self.EPSILON),
       plot=False,
     )
 
