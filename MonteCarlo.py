@@ -6,8 +6,11 @@ Leiden University, The Netherlands
 2021
 By Thomas Moerland
 """
+import time
 
 import numpy as np
+
+from ActionSelectionPolicy import ActionSelectionPolicy, AnnealingEGreedyPolicy, EGreedyPolicy
 from Environment import StochasticWindyGridworld
 from Helper import softmax, argmax
 
@@ -19,66 +22,106 @@ class MonteCarloAgent:
         self.learning_rate = learning_rate
         self.gamma = gamma
         self.Q_sa = np.zeros((n_states,n_actions))
-        
-    def select_action(self, s, policy='egreedy', epsilon=None, temp=None):
-        
-        if policy == 'egreedy':
-            if epsilon is None:
-                raise KeyError("Provide an epsilon")
-                
-            # TO DO: Add own code
-            a = np.random.randint(0,self.n_actions) # Replace this with correct action selection
-            
-                
-        elif policy == 'softmax':
-            if temp is None:
-                raise KeyError("Provide a temperature")
-                
-            # TO DO: Add own code
-            a = np.random.randint(0,self.n_actions) # Replace this with correct action selection
-            
-        return a
-        
+
+    def select_action(self, state, policy: ActionSelectionPolicy):
+        return policy.select_action_from(state, self.Q_sa, self.n_actions)
+
     def update(self, states, actions, rewards):
-        ''' states is a list of states observed in the episode, of length T_ep + 1 (last state is appended)
+        '''
+        states is a list of states observed in the episode, of length T_ep
         actions is a list of actions observed in the episode, of length T_ep
         rewards is a list of rewards observed in the episode, of length T_ep
-        done indicates whether the final s in states is was a terminal state '''
-        # TO DO: Add own code
-        pass
+        '''
 
-def monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma, 
-                   policy='egreedy', epsilon=None, temp=None, plot=True):
+        rewards_sum = 0
+        for index, (state, action, reward) in enumerate(zip(states[::-1], actions[::-1], rewards[::-1])):
+            rewards_sum = reward + self.gamma*rewards_sum
+            self.Q_sa[state][action] += self.learning_rate * (rewards_sum - self.Q_sa[state][action])
+
+    def a_random_state(self):
+        return np.random.randint(0, self.n_states)
+
+def monte_carlo(
+  n_timesteps,
+  max_episode_length,
+  learning_rate,
+  gamma,
+  policy: ActionSelectionPolicy,
+  plot=True
+):
     ''' runs a single repetition of an MC rl agent
     Return: rewards, a vector with the observed rewards at each timestep ''' 
     
     env = StochasticWindyGridworld(initialize_model=False)
-    pi = MonteCarloAgent(env.n_states, env.n_actions, learning_rate, gamma)
+    agent = MonteCarloAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
 
-    # TO DO: Write your Monte Carlo RL algorithm here!
-    
-    # if plot:
-    #    env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during Monte Carlo RL execution
+    for timestep in range(n_timesteps):
+        state = agent.a_random_state()
+        env.set_location_from(state)
 
+        # play episode
+        states, actions, timestep_rewards = [], [], []
+        done = False
+
+        for episode_step in range(max_episode_length):
+            selected_action = agent.select_action(state, policy)
+            states.append(state)
+            actions.append(selected_action)
+
+            next_state, reward, done = env.step(selected_action)
+            timestep_rewards.append(reward)
+
+            state = next_state
+
+            if plot:
+                env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
+            if done:
+                break
+
+        rewards.append(timestep_rewards)
+
+        agent.update(states, actions, timestep_rewards)
+        if plot:
+            env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=10.0)
+
+        # time.sleep(100)
     return rewards 
     
 def test():
-    n_timesteps = 1000
-    max_episode_length = 100
+    n_timesteps = 2
+    max_episode_length = 10
     gamma = 1.0
     learning_rate = 0.1
 
     # Exploration
-    policy = 'egreedy' # 'egreedy' or 'softmax' 
-    epsilon = 0.1
-    temp = 1.0
-    
+    policy = EGreedyPolicy(epsilon=0.1)
+    policy = AnnealingEGreedyPolicy(
+        timesteps=n_timesteps,
+        initial_epsilon=0.9,
+        final_epsilon=0.001,
+        steps_percentage=0.9
+    )
+    # policy = SoftMaxPolicy(temperature=1.0)
+    # policy = AnnealingSoftMaxPolicy(
+    #     timesteps=n_timesteps,
+    #     initial_temperature=10,
+    #     final_temperature=0.001,
+    #     steps_percentage=0.9
+    # )
+
     # Plotting parameters
     plot = True
 
-    rewards = monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma, 
-                   policy, epsilon, temp, plot)
+    rewards = monte_carlo(
+        n_timesteps,
+        max_episode_length,
+        learning_rate,
+        gamma,
+        policy,
+        plot
+    )
+
     print("Obtained rewards: {}".format(rewards))  
             
 if __name__ == '__main__':
