@@ -3,7 +3,6 @@
 
 import numpy as np
 from Environment import StochasticWindyGridworld
-from Helper import argmax
 
 class QValueIterationAgent:
     ''' Class to store the Q-value iteration solution, perform updates, and select the greedy action '''
@@ -33,16 +32,16 @@ class QValueIterationAgent:
         ))
         self.Q_sa[state][action] = updated_Q_sa
         pass
-    
-    
-    
+
+
 def Q_value_iteration(env, gamma=1.0, threshold=0.001):
     ''' Runs Q-value iteration. Returns a converged QValueIterationAgent object '''
     
     QIagent = QValueIterationAgent(env.n_states, env.n_actions, gamma)
-        
     # TO DO: IMPLEMENT Q-VALUE ITERATION HERE
-    
+    env.render(Q_sa=QIagent.Q_sa,plot_optimal_policy=True,step_pause=0.2)
+    env.save_as_image(0)
+
     iteration = 1
     delta = threshold
     while delta >= threshold:
@@ -53,26 +52,28 @@ def Q_value_iteration(env, gamma=1.0, threshold=0.001):
                 QIagent.update(state, action, env.p_sas, env.r_sas)
                 delta = max(delta, np.abs(initial_value - QIagent.Q_sa[state][action]))
 
-        env.render(Q_sa=QIagent.Q_sa,plot_optimal_policy=True,step_pause=0.2)
+        env.render(Q_sa=QIagent.Q_sa,plot_optimal_policy=True,step_pause=0.5)
+        env.save_as_image(iteration)
+
         print(f"Q-value iteration, iteration {iteration}, max error {delta}")
         iteration += 1
 
     return QIagent
 
 def experiment():
-    gamma = 1.0
+    gamma = 0.9
     threshold = 0.001
-    env = StochasticWindyGridworld(initialize_model=True)
+    env = StochasticWindyGridworld(initialize_model=True, name='DynamicProgramming')
     env.render()
     QIagent = Q_value_iteration(env, gamma, threshold)
-    
+
     # View optimal policy
     done = False
     s = env.reset()
     while not done:
         a = QIagent.select_action(s)
         s_next, r, done = env.step(a)
-        env.render(Q_sa=QIagent.Q_sa,plot_optimal_policy=True,step_pause=0.5)
+        env.render(Q_sa=QIagent.Q_sa,plot_optimal_policy=True,step_pause=0.2)
         s = s_next
 
     # TO DO: Compute mean reward per timestep under the optimal policy

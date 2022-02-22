@@ -6,7 +6,7 @@ Leiden University, The Netherlands
 2022
 By Thomas Moerland
 """
-
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle,Circle,Arrow
@@ -17,7 +17,7 @@ class StochasticWindyGridworld:
         Compared to the book version, the vertical wind is now stochastic, and only blows 80% of the times
     '''
     
-    def __init__(self,initialize_model=True):
+    def __init__(self,initialize_model=True, name=''):
         self.height = 7
         self.width = 10
         self.reward_per_step = -1.0
@@ -40,6 +40,12 @@ class StochasticWindyGridworld:
         self.Q_labels = None
         self.arrows = None
         self.reset() # set agent to the start location
+        self.name = name
+
+        self.figures_dir = 'figures'
+
+        if not os.path.isdir(self.figures_dir):
+            os.makedirs(self.figures_dir)
 
     def reset(self):
         ''' set the agent back to the start location '''
@@ -163,7 +169,7 @@ class StochasticWindyGridworld:
         return 
 
     def _initialize_plot(self):
-        self.fig,self.ax = plt.subplots()#figsize=(self.width, self.height+1)) # Start a new figure
+        self.fig,self.ax = plt.subplots(figsize=(self.width+4, self.height))#figsize=(self.width, self.height+1)) # Start a new figure
         self.ax.set_xlim([0,self.width])
         self.ax.set_ylim([0,self.height]) 
         self.ax.axes.xaxis.set_visible(False)
@@ -171,8 +177,8 @@ class StochasticWindyGridworld:
 
         for x in range(self.width):
             for y in range(self.height):
-                self.ax.add_patch(Rectangle((x, y),1,1, linewidth=0, facecolor='k',alpha=self.winds[x]/4))       
-                self.ax.add_patch(Rectangle((x, y),1,1, linewidth=0.5, edgecolor='k', fill=False))     
+                self.ax.add_patch(Rectangle((x, y),1,1, linewidth=0, facecolor='k',alpha=self.winds[x]/4))
+                self.ax.add_patch(Rectangle((x, y),1,1, linewidth=0.5, edgecolor='k', fill=False))
 
         self.ax.axvline(0,0,self.height,linewidth=5,c='k')
         self.ax.axvline(self.width,0,self.height,linewidth=5,c='k')
@@ -214,6 +220,9 @@ class StochasticWindyGridworld:
                                           self.action_effects[max_action][1]*0.2, width=0.05,color='k')
                 ax_arrow = self.ax.add_patch(new_arrow)
                 self.arrows.append(ax_arrow)
+
+    def save_as_image(self, iteration):
+        self.fig.savefig(f'{self.figures_dir}/{self.name}_iteration-{iteration}')
 
 def full_argmax(x):
     ''' Own variant of np.argmax, since np.argmax only returns the first occurence of the max '''
