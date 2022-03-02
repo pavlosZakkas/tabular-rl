@@ -14,7 +14,7 @@ from scipy.signal import savgol_filter
 class LearningCurvePlot:
 
     def __init__(self,title=None):
-        self.fig,self.ax = plt.subplots()
+        self.fig,self.ax = plt.subplots(figsize=(8,5))
         self.ax.set_xlabel('Time')
         self.ax.set_ylabel('Reward')      
         if title is not None:
@@ -34,9 +34,10 @@ class LearningCurvePlot:
     def add_hline(self,height,label):
         self.ax.axhline(height,ls='--',c='k',label=label)
 
-    def save(self,name='test.png'):
+    def save(self,name='test.png', loc='lower right'):
         ''' name: string for filename of saved figure '''
-        self.ax.legend()
+        self.ax.legend(loc=loc, ncol=1)
+        # self.ax.legend()
         self.fig.savefig(name,dpi=300)
 
 def smooth(y, window, poly=1):
