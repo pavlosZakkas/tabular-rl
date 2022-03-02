@@ -43,6 +43,7 @@ def sarsa(
     env = StochasticWindyGridworld(initialize_model=False)
     agent = SarsaAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
+    times_reached_goal = 0
 
     state = env.reset()
     action = agent.select_action(state, policy)
@@ -56,6 +57,7 @@ def sarsa(
         if done:
             state = env.reset()
             action = agent.select_action(state, policy)
+            times_reached_goal += 1
         else:
             state = next_state
             action = next_action
@@ -63,6 +65,7 @@ def sarsa(
         if plot:
             env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
 
+    print(f'Found goal state {times_reached_goal} times')
     return rewards
 
 

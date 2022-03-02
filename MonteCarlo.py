@@ -52,6 +52,7 @@ def monte_carlo(
     env = StochasticWindyGridworld(initialize_model=False)
     agent = MonteCarloAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
+    times_reached_goal = 0
 
     timestep = 0
     while timestep < n_timesteps:
@@ -78,6 +79,8 @@ def monte_carlo(
 
             timestep += 1
             if done or timestep == n_timesteps:
+                if done:
+                    times_reached_goal += 1
                 break
 
         # rewards.append(timestep_rewards)
@@ -87,6 +90,7 @@ def monte_carlo(
             env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=10.0)
 
         # time.sleep(100)
+    print(f'Found goal state {times_reached_goal} times')
     return rewards 
     
 def test():

@@ -36,14 +36,15 @@ def q_learning(
     Return: rewards, a vector with the observed rewards at each timestep '''
 
     env = StochasticWindyGridworld(initialize_model=False)
-    agent = QLearningAgent(env.observation_space.n, env.action_space.n, learning_rate, gamma)
+    agent = QLearningAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
     # first_timestep = 0
+    times_reached_goal = 0
 
     state = env.reset()
     for timestep in range(n_timesteps):
         selected_action = agent.select_action(state, policy)
-        next_state, reward, done, _ = env.step(selected_action)
+        next_state, reward, done = env.step(selected_action)
         rewards.append(reward)
         agent.update(state, selected_action, reward, next_state, done)
         state = next_state
@@ -54,8 +55,10 @@ def q_learning(
         if done:
             # print(f'Found goal in {timestep - first_timestep} steps')
             # first_timestep = timestep
+            times_reached_goal += 1
             state = env.reset()
 
+    print(f'Found goal state {times_reached_goal} times')
     return rewards
 
 def test():

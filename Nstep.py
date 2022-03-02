@@ -68,7 +68,7 @@ def n_step_Q(
     agent = NstepQLearningAgent(env.n_states, env.n_actions, learning_rate, gamma, depth_n)
     rewards = []
 
-    solution_found = 0
+    times_reached_goal = 0
     timestep = 0
     while timestep < n_timesteps:
         state = env.reset()
@@ -95,7 +95,7 @@ def n_step_Q(
             timestep += 1
             if done or timestep == n_timesteps:
                 if done:
-                    solution_found += 1
+                    times_reached_goal += 1
                 break
 
         episode_length = episode_step + 1
@@ -111,7 +111,7 @@ def n_step_Q(
             if plot:
                 env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
 
-    print(f'Found solution {solution_found} times')
+    print(f'Found goal state {times_reached_goal} times')
     return rewards
 
 def test():
