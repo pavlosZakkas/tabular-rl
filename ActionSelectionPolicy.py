@@ -29,6 +29,10 @@ class EGreedyPolicy(ActionSelectionPolicy):
   def highest_valued_action_from(self, state, Q_sa):
     return argmax(Q_sa[state])
 
+  def label(self, timesteps=None):
+    epsilon = r'$\epsilon$'
+    return f"{epsilon}-greedy {epsilon}={self.epsilon}"
+
 class SoftMaxPolicy(ActionSelectionPolicy):
 
   def __init__(self, temperature):
@@ -40,6 +44,10 @@ class SoftMaxPolicy(ActionSelectionPolicy):
   def select_action_from(self, state, Q_sa, n_actions):
     action_probs = softmax(Q_sa[state], self.temperature)
     return np.random.choice(range(n_actions), 1, p=action_probs)[0]
+
+  def label(self, timesteps=None):
+    tau = r'$\tau$'
+    return f"softmax {tau}={self.temperature}"
 
 class AnnealingEGreedyPolicy(EGreedyPolicy):
 
@@ -63,6 +71,10 @@ class AnnealingEGreedyPolicy(EGreedyPolicy):
 
     return super().select_action_from(state, Q_sa, n_actions)
 
+  def label(self, timesteps=None):
+    epsilon = r'$\epsilon$'
+    return f"{epsilon}-greedy {epsilon} anneal {self.initial_epsilon}->{self.final_epsilon} in {int(self.steps_percentage * 100)}% steps"
+
 class AnnealingSoftMaxPolicy(SoftMaxPolicy):
 
   def __init__(self, timesteps, initial_temperature, final_temperature, steps_percentage):
@@ -85,3 +97,6 @@ class AnnealingSoftMaxPolicy(SoftMaxPolicy):
 
     return super().select_action_from(state, Q_sa, n_actions)
 
+  def label(self, timesteps=None):
+    tau = r'$\tau$'
+    return f"softmax {tau} anneal {self.initial_temperature}->{self.final_temperature} in {int(self.steps_percentage * 100)}% steps"
