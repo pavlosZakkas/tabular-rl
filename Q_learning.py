@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+np.random.seed(42)
 
 from ActionSelectionPolicy import ActionSelectionPolicy, EGreedyPolicy, SoftMaxPolicy, AnnealingEGreedyPolicy, \
     AnnealingSoftMaxPolicy
@@ -23,8 +24,6 @@ class QLearningAgent:
         back_up_estimate = reward + self.gamma * max(self.Q_sa[next_state])
         self.Q_sa[state][action] += self.learning_rate * (back_up_estimate - self.Q_sa[state][action])
 
-    def a_random_state(self):
-        return np.random.randint(0, self.n_states)
 
 def q_learning(
   n_timesteps,
@@ -37,25 +36,25 @@ def q_learning(
     Return: rewards, a vector with the observed rewards at each timestep '''
 
     env = StochasticWindyGridworld(initialize_model=False)
-    agent = QLearningAgent(env.n_states, env.n_actions, learning_rate, gamma)
+    agent = QLearningAgent(env.observation_space.n, env.action_space.n, learning_rate, gamma)
     rewards = []
+    # first_timestep = 0
 
-    state = agent.a_random_state()
-    env.set_location_from(state)
-
+    state = env.reset()
     for timestep in range(n_timesteps):
         selected_action = agent.select_action(state, policy)
-        next_state, reward, done = env.step(selected_action)
+        next_state, reward, done, _ = env.step(selected_action)
         rewards.append(reward)
         agent.update(state, selected_action, reward, next_state, done)
         state = next_state
 
         if plot:
-            env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
+            env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.2)
 
         if done:
-            break
-
+            # print(f'Found goal in {timestep - first_timestep} steps')
+            # first_timestep = timestep
+            state = env.reset()
 
     return rewards
 
@@ -81,7 +80,7 @@ def test():
     #     steps_percentage=0.9
     # )
     # Plotting parameters
-    plot = True
+    plot = False
 
     rewards = q_learning(n_timesteps, learning_rate, gamma, policy, plot)
     print("Obtained rewards: {}".format(rewards))

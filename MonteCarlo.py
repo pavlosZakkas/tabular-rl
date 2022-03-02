@@ -9,7 +9,7 @@ By Thomas Moerland
 import time
 
 import numpy as np
-
+np.random.seed(42)
 from ActionSelectionPolicy import ActionSelectionPolicy, AnnealingEGreedyPolicy, EGreedyPolicy
 from Environment import StochasticWindyGridworld
 from Helper import softmax, argmax
@@ -38,9 +38,6 @@ class MonteCarloAgent:
             rewards_sum = reward + self.gamma*rewards_sum
             self.Q_sa[state][action] += self.learning_rate * (rewards_sum - self.Q_sa[state][action])
 
-    def a_random_state(self):
-        return np.random.randint(0, self.n_states)
-
 def monte_carlo(
   n_timesteps,
   max_episode_length,
@@ -56,8 +53,9 @@ def monte_carlo(
     agent = MonteCarloAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
 
-    for timestep in range(n_timesteps):
-        state = agent.a_random_state()
+    timestep = 0
+    while timestep < n_timesteps:
+        state = env.reset()
         env.set_location_from(state)
 
         # play episode
@@ -70,16 +68,19 @@ def monte_carlo(
             actions.append(selected_action)
 
             next_state, reward, done = env.step(selected_action)
+            rewards.append(reward)
             timestep_rewards.append(reward)
 
             state = next_state
 
             if plot:
                 env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
-            if done:
+
+            timestep += 1
+            if done or timestep == n_timesteps:
                 break
 
-        rewards.append(timestep_rewards)
+        # rewards.append(timestep_rewards)
 
         agent.update(states, actions, timestep_rewards)
         if plot:

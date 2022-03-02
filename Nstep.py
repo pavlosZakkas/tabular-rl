@@ -8,7 +8,7 @@ By Thomas Moerland
 """
 
 import numpy as np
-
+np.random.seed(42)
 from ActionSelectionPolicy import ActionSelectionPolicy, EGreedyPolicy, AnnealingEGreedyPolicy
 from Environment import StochasticWindyGridworld
 from Helper import softmax, argmax
@@ -53,9 +53,6 @@ class NstepQLearningAgent:
     def discounted_sum_of(self, rewards):
         return np.sum([self.gamma**i * reward for i, reward in enumerate(rewards)])
 
-    def a_random_state(self):
-        return np.random.randint(0, self.n_states)
-
 def n_step_Q(
   n_timesteps,
   max_episode_length,
@@ -72,32 +69,35 @@ def n_step_Q(
     agent = NstepQLearningAgent(env.n_states, env.n_actions, learning_rate, gamma, depth_n)
     rewards = []
 
-    for timestep in range(n_timesteps):
-        state = agent.a_random_state()
-        env.set_location_from(state)
+    timestep = 0
+    while timestep < n_timesteps:
+        state = env.reset()
 
         # play episode
         states, actions, timestep_rewards = [state], [], []
         done = False
 
         for episode_step in range(max_episode_length):
+
             selected_action = agent.select_action(state, policy)
             actions.append(selected_action)
 
             next_state, reward, done = env.step(selected_action)
             states.append(next_state)
             timestep_rewards.append(reward)
+            rewards.append(reward)
 
             state = next_state
 
             if plot:
                 env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
-            if done:
+
+            timestep += 1
+            if done or timestep == n_timesteps:
                 break
 
-
         episode_length = episode_step + 1
-        rewards.append(timestep_rewards)
+        # rewards.append(timestep_rewards)
 
         # update Q table
         for episode_step in range(episode_length):

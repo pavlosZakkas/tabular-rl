@@ -8,6 +8,7 @@ By Thomas Moerland
 """
 
 import numpy as np
+np.random.seed(42)
 
 from ActionSelectionPolicy import ActionSelectionPolicy, AnnealingEGreedyPolicy
 from Environment import StochasticWindyGridworld
@@ -29,9 +30,6 @@ class SarsaAgent:
         back_up_estimate = reward + self.gamma * self.Q_sa[next_state][next_action]
         self.Q_sa[state][action] += self.learning_rate * (back_up_estimate - self.Q_sa[state][action])
 
-    def a_random_state(self):
-        return np.random.randint(0, self.n_states)
-
 def sarsa(
     n_timesteps,
     learning_rate,
@@ -46,9 +44,8 @@ def sarsa(
     agent = SarsaAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
 
-    state = agent.a_random_state()
+    state = env.reset()
     action = agent.select_action(state, policy)
-    env.set_location_from(state)
 
     for timestep in range(n_timesteps):
         next_state, reward, done = env.step(action)
@@ -56,14 +53,15 @@ def sarsa(
         next_action = agent.select_action(next_state, policy)
         agent.update(state, action, reward, next_state, next_action, done)
 
-        state = next_state
-        action = next_action
+        if done:
+            state = env.reset()
+            action = agent.select_action(state, policy)
+        else:
+            state = next_state
+            action = next_action
 
         if plot:
             env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
-
-        if done:
-            break
 
     return rewards
 
