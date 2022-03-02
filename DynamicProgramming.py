@@ -139,6 +139,32 @@ def experiment(in_place_updates=True):
     mean_reward_per_timestep =  initial_state_value / (env.goal_reward - initial_state_value)
     print("Mean reward per timestep under optimal policy: {}".format(mean_reward_per_timestep))
 
+
+def taxi_experiment():
+
+    env = TaxiEnvironment()
+    gamma = 1.0
+    threshold = 0.001
+    env.render()
+    QIagent = Q_value_iteration(env, gamma, threshold)
+
+    # View optimal policy
+    done = False
+    s = env.reset()
+    while not done:
+        a = QIagent.select_action(s)
+        s_next, r, done = env.step(a)
+        # env.render(Q_sa=QIagent.Q_sa, plot_optimal_policy=True, step_pause=0.2)
+        s = s_next
+
+    # TO DO: Compute mean reward per timestep under the optimal policy
+    initial_state = env.reset()
+    best_action = QIagent.select_action(initial_state)
+    initial_state_value = QIagent.Q_sa[initial_state][best_action]
+    mean_reward_per_timestep = initial_state_value / (env.goal_reward - initial_state_value)
+    # print("Mean reward per timestep under optimal policy: {}".format(mean_reward_per_timestep))
+
+
 if __name__ == '__main__':
     print('Executing Q value iteration with in place updates of Q table')
     experiment(True)
