@@ -11,7 +11,6 @@ import numpy as np
 np.random.seed(42)
 from ActionSelectionPolicy import ActionSelectionPolicy, EGreedyPolicy, AnnealingEGreedyPolicy
 from Environment import StochasticWindyGridworld
-from Helper import softmax, argmax
 
 class NstepQLearningAgent:
 
@@ -69,6 +68,7 @@ def n_step_Q(
     agent = NstepQLearningAgent(env.n_states, env.n_actions, learning_rate, gamma, depth_n)
     rewards = []
 
+    solution_found = 0
     timestep = 0
     while timestep < n_timesteps:
         state = env.reset()
@@ -94,6 +94,8 @@ def n_step_Q(
 
             timestep += 1
             if done or timestep == n_timesteps:
+                if done:
+                    solution_found += 1
                 break
 
         episode_length = episode_step + 1
@@ -109,6 +111,7 @@ def n_step_Q(
             if plot:
                 env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
 
+    print(f'Found solution {solution_found} times')
     return rewards
 
 def test():
@@ -135,7 +138,7 @@ def test():
     # )
 
     # Plotting parameters
-    plot = True
+    plot = False
 
     rewards = n_step_Q(
         n_timesteps,
@@ -147,7 +150,7 @@ def test():
         depth_n=n
     )
 
-    print("Obtained rewards: {}".format(rewards))
+    # print("Obtained rewards: {}".format(rewards))
 
 if __name__ == '__main__':
     test()
