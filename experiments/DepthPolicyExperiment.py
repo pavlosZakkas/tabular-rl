@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from ActionSelectionPolicy import ActionSelectionPolicy, EGreedyPolicy, SoftMaxPolicy, AnnealingEGreedyPolicy, \
-    AnnealingSoftMaxPolicy
+from ActionSelectionPolicy import AnnealingSoftMaxPolicy
 from ExperimentHelper import average_over_repetitions
-from Helper import LearningCurvePlot, smooth
+from Helper import LearningCurvePlot
 import os
 
 GAMMA = 1.0

@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import sys,os
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+
 from ActionSelectionPolicy import EGreedyPolicy, SoftMaxPolicy, AnnealingEGreedyPolicy, AnnealingSoftMaxPolicy
 from ExperimentHelper import average_over_repetitions
 from Helper import LearningCurvePlot
-import os
+
 
 GAMMA = 1.0
 # GAMMAS = [0.9, 0.99, 1.0]
