@@ -8,6 +8,7 @@ By Thomas Moerland
 """
 import os
 import numpy as np
+np.random.seed(42)
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle,Circle,Arrow
 
@@ -41,6 +42,9 @@ class StochasticWindyGridworld:
         self.arrows = None
         self.reset() # set agent to the start location
         self.name = name
+        self.state_2_below_from_target = self._location_to_state(np.array([7,1]))
+        self.state_2_right_from_target = self._location_to_state(np.array([9,3]))
+        self.state_2_left_from_target = self._location_to_state(np.array([5,3]))
 
         self.figures_dir = 'figures'
 
@@ -72,8 +76,11 @@ class StochasticWindyGridworld:
             r = self.goal_reward
         else:
             done = False
+            # if np.all(self.agent_location == (5, 3)) or np.all(self.agent_location == (5, 4)) or np.all(self.agent_location == (8, 2)) or np.all(self.agent_location == (8, 1)):
+            #     r = -10000
+            # else:
+            #     r = self.reward_per_step
             r = self.reward_per_step
-            
         return s_next, r, done  
 
     def model(self,s,a):
@@ -222,7 +229,11 @@ class StochasticWindyGridworld:
                 self.arrows.append(ax_arrow)
 
     def save_as_image(self, iteration):
-        self.fig.savefig(f'{self.figures_dir}/{self.name}_iteration-{iteration}')
+        target_dir = os.path.join(self.figures_dir, self.name)
+        if not os.path.isdir(target_dir):
+            os.makedirs(target_dir)
+
+        self.fig.savefig(f'{self.figures_dir}/{self.name}/{self.name}_iteration-{iteration}')
 
 def full_argmax(x):
     ''' Own variant of np.argmax, since np.argmax only returns the first occurence of the max '''
