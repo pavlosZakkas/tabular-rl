@@ -8,7 +8,7 @@ By Thomas Moerland
 """
 import os
 import numpy as np
-np.random.seed(42)
+np.random.seed(10)
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle,Circle,Arrow
 
@@ -42,6 +42,7 @@ class StochasticWindyGridworld:
         self.arrows = None
         self.reset() # set agent to the start location
         self.name = name
+        self.type = 'custom'
         self.state_2_below_from_target = self._location_to_state(np.array([7,1]))
         self.state_2_right_from_target = self._location_to_state(np.array([9,3]))
         self.state_2_left_from_target = self._location_to_state(np.array([5,3]))
