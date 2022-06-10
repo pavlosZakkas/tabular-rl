@@ -2,19 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import sys,os
-
-from Environment import StochasticWindyGridworld
-
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
-from ActionSelectionPolicy import EGreedyPolicy, SoftMaxPolicy, AnnealingEGreedyPolicy, \
-    AnnealingSoftMaxPolicy
-from experiments.ExperimentHelper import average_over_repetitions, OPTIMAL_AVERAGE_REWARD_PER_TIMESTEP
+from extra_environments.CliffWalkingEnvironment import CliffWalkingEnvironment
+from ActionSelectionPolicy import EGreedyPolicy
+from experiments.ExperimentHelper import average_over_repetitions
 from Helper import LearningCurvePlot
 
 GAMMA = 1.0
-GAMMAS = [1.0, 0.99, 0.9]
-LEARNING_RATES = [0.05, 0.2, 0.4, 0.8, 1.5]
+LEARNING_RATES = [0.2, 0.4]
 
 BACKUPS = ['q', 'sarsa']
 NAME_PER_BACKUP = {
@@ -24,19 +20,15 @@ NAME_PER_BACKUP = {
 
 TIMESTEPS = 50000
 REPETITIONS = 50
-SMOOTHING_WINDOW = 1001
+SMOOTHING_WINDOW = 1501
 PLOT = False
 ALPHA = r'$\alpha$'
 
 # Exploration:
 DEAFULT_EGREEDY = EGreedyPolicy(0.05)
-# BEST_EGREEDY = EGreedyPolicy(0.01)
-# BEST_SOFTMAX = SoftMaxPolicy(0.1)
-# BEST_ANNEALING_EGREEDY = AnnealingEGreedyPolicy(TIMESTEPS, 0.8, 0.01, 0.2)
-# BEST_ANNEALING_SOFTMAX = AnnealingSoftMaxPolicy(TIMESTEPS, 5.0, 0.01, 0.7)
 SELECTED_POLICY = DEAFULT_EGREEDY
 
-FIGURES_DIR = 'figures'
+FIGURES_DIR = 'Figures'
 BACKUP_POLICY_DIR = f'{FIGURES_DIR}/BackUpPolicy'
 
 def run_experiment_and_save_figure(gamma, backups, learning_rates, fig_title, file_name, env):
@@ -65,12 +57,9 @@ def run_experiment_and_save_figure(gamma, backups, learning_rates, fig_title, fi
             label=f'{NAME_PER_BACKUP[backup]} {ALPHA}={learning_rate}'
         )
 
-    if env.name == 'windy_world':
-        Plot.add_hline(OPTIMAL_AVERAGE_REWARD_PER_TIMESTEP, label="DP optimum")
-
     Plot.save(os.path.join(BACKUP_POLICY_DIR, env.name, file_name))
 
-def experiment(env=StochasticWindyGridworld(initialize_model=False)):
+def experiment(env=CliffWalkingEnvironment(name='frozen_lake')):
     if not os.path.isdir(FIGURES_DIR):
         os.makedirs(FIGURES_DIR)
     if not os.path.isdir(BACKUP_POLICY_DIR):
@@ -78,25 +67,15 @@ def experiment(env=StochasticWindyGridworld(initialize_model=False)):
     if not os.path.isdir(os.path.join(BACKUP_POLICY_DIR, env.name)):
         os.makedirs(os.path.join(BACKUP_POLICY_DIR, env.name))
 
-    # run_experiment_and_save_figure(
-    #     gamma=GAMMA,
-    #     backups=BACKUPS,
-    #     learning_rates=LEARNING_RATES,
-    #     fig_title=r'Q-learning versus SARSA for $\gamma$=' + str(GAMMA),
-    #     file_name=f'on_off_policy_gamma-{GAMMA}.png',
-    #     env=env
-    # )
-
-    for gamma in GAMMAS:
-        run_experiment_and_save_figure(
-            gamma=gamma,
-            backups=BACKUPS,
-            learning_rates=LEARNING_RATES,
-            fig_title=r'Q-learning versus SARSA for $\gamma$=' + str(gamma),
-            file_name=f'on_off_policy_gamma-{gamma}.png',
-            env=env
-        )
+    run_experiment_and_save_figure(
+        gamma=GAMMA,
+        backups=BACKUPS,
+        learning_rates=LEARNING_RATES,
+        fig_title=r'Q-learning versus SARSA for $\gamma$=' + str(GAMMA),
+        file_name=f'on_off_policy_gamma-{GAMMA}.png',
+        env=env
+    )
 
 if __name__ == '__main__':
-    print('BackUp')
+    print('Additional BackUp experiment')
     experiment()

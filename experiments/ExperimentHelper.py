@@ -1,6 +1,8 @@
 
 import numpy as np
 
+from Environment import StochasticWindyGridworld
+
 np.random.seed(42)
 import time
 
@@ -10,6 +12,8 @@ from SARSA import sarsa
 from MonteCarlo import monte_carlo
 from Nstep import n_step_Q
 from Helper import smooth
+
+OPTIMAL_AVERAGE_REWARD_PER_TIMESTEP = 1.0352600662204607
 
 def average_over_repetitions(
   backup,
@@ -21,22 +25,23 @@ def average_over_repetitions(
   policy: ActionSelectionPolicy,
   smoothing_window=51,
   plot=False,
-  n=5
+  n=5,
+  env=StochasticWindyGridworld(initialize_model=False)
 ):
   reward_results = np.empty([n_repetitions, n_timesteps])  # Result array
   now = time.time()
 
   for rep in range(n_repetitions):  # Loop over repetitions
     if backup == 'q':
-      rewards = q_learning(n_timesteps, learning_rate, gamma, policy, plot)
+      rewards = q_learning(n_timesteps, learning_rate, gamma, policy, plot, env)
     elif backup == 'sarsa':
-      rewards = sarsa(n_timesteps, learning_rate, gamma, policy, plot)
+      rewards = sarsa(n_timesteps, learning_rate, gamma, policy, plot, env)
     elif backup == 'mc':
       rewards = monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma,
-                            policy, plot)
+                            policy, plot, env)
     elif backup == 'nstep':
       rewards = n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma,
-                         policy, plot, depth_n=n)
+                         policy, plot, depth_n=n, env=env)
 
     reward_results[rep] = rewards
 

@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import sys,os
+
+from Environment import StochasticWindyGridworld
+
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from ActionSelectionPolicy import EGreedyPolicy, SoftMaxPolicy, AnnealingEGreedyPolicy, AnnealingSoftMaxPolicy
-from ExperimentHelper import average_over_repetitions
+from experiments.ExperimentHelper import average_over_repetitions, OPTIMAL_AVERAGE_REWARD_PER_TIMESTEP
 from Helper import LearningCurvePlot
 
 
@@ -16,9 +19,8 @@ LEARNING_RATE = 0.25
 BACKUP = 'q'
 TIMESTEPS = 50000
 REPETITIONS = 50
-SMOOTHING_WINDOW = 2001
+SMOOTHING_WINDOW = 1401
 PLOT = False
-OPTIMAL_AVERAGE_REWARD_PER_TIMESTEP = 1.0958
 
 # Exploration:
 # action selection policies to be tested
@@ -41,9 +43,9 @@ MID_ANNEALING_EGREEDY_POLICIES = [
     AnnealingEGreedyPolicy(TIMESTEPS, 0.8, 0.01, 0.5),
 ]
 HIGH_ANNEALING_EGREEDY_POLICIES = [
-    AnnealingEGreedyPolicy(TIMESTEPS, 1.0, 0.05, 0.3),
-    AnnealingEGreedyPolicy(TIMESTEPS, 1.0, 0.0, 0.2),
-    AnnealingEGreedyPolicy(TIMESTEPS, 0.8, 0.01, 0.2),
+    AnnealingEGreedyPolicy(TIMESTEPS, 1.0, 0.05, 0.8),
+    AnnealingEGreedyPolicy(TIMESTEPS, 1.0, 0.0, 0.7),
+    AnnealingEGreedyPolicy(TIMESTEPS, 0.8, 0.01, 0.7),
 ]
 # annealing softmax policies to compare with best softmax policy
 LOW_ANNEALING_SOFTMAX_POLICIES = [
@@ -62,16 +64,10 @@ HIGH_ANNEALING_SOFTMAX_POLICIES = [
     AnnealingSoftMaxPolicy(TIMESTEPS, 1.0, 0.01, 0.7),
 ]
 
+FIGURES_DIR = 'figures'
+EXPLORATION_DIR = f'{FIGURES_DIR}/Exploration'
 
-FIGURES_DIR = '../figures'
-EXPLORATION_DIR = f'{FIGURES_DIR}/TaxiExploration'
-
-if not os.path.isdir(FIGURES_DIR):
-    os.makedirs(FIGURES_DIR)
-if not os.path.isdir(EXPLORATION_DIR):
-    os.makedirs(EXPLORATION_DIR)
-
-def run_experiment_and_save_figure(policies, fig_title, file_name):
+def run_experiment_and_save_figure(policies, fig_title, file_name, env):
     Plot = LearningCurvePlot(title=fig_title)
     learning_curve_per_policy = {}
     for policy in policies:
@@ -85,7 +81,8 @@ def run_experiment_and_save_figure(policies, fig_title, file_name):
             policy,
             SMOOTHING_WINDOW,
             PLOT,
-            None
+            None,
+            env
         )
         learning_curve_per_policy[policy] = learning_curve
 
@@ -95,51 +92,67 @@ def run_experiment_and_save_figure(policies, fig_title, file_name):
             label=policy.label(TIMESTEPS)
         )
 
-    Plot.add_hline(OPTIMAL_AVERAGE_REWARD_PER_TIMESTEP, label="DP optimum")
-    Plot.save(os.path.join(EXPLORATION_DIR, file_name))
+    if env.name == 'windy_world':
+        Plot.add_hline(OPTIMAL_AVERAGE_REWARD_PER_TIMESTEP, label="DP optimum")
 
-def experiment():
+    Plot.save(os.path.join(EXPLORATION_DIR, env.name, file_name))
 
-    # run_experiment_and_save_figure(
-    #     policies=EGREEDY_POLICIES + SOFTMAX_POLICIES,
-    #     fig_title='Q-learning: effect of $\epsilon$-greedy versus softmax exploration',
-    #     file_name=f'exploration_g-{GAMMA}_lr-{LEARNING_RATE}.png'
-    # )
+def experiment(env=StochasticWindyGridworld(initialize_model=False)):
+    if not os.path.isdir(FIGURES_DIR):
+        os.makedirs(FIGURES_DIR)
+    if not os.path.isdir(EXPLORATION_DIR):
+        os.makedirs(EXPLORATION_DIR)
+    if not os.path.isdir(os.path.join(EXPLORATION_DIR, env.name)):
+        os.makedirs(os.path.join(EXPLORATION_DIR, env.name))
+
+    run_experiment_and_save_figure(
+        policies=EGREEDY_POLICIES + SOFTMAX_POLICIES,
+        fig_title='Q-learning: effect of $\epsilon$-greedy versus softmax exploration',
+        file_name=f'exploration_g-{GAMMA}_lr-{LEARNING_RATE}.png',
+        env=env
+    )
 
     run_experiment_and_save_figure(
         policies=[BEST_EGREEDY] + LOW_ANNEALING_EGREEDY_POLICIES,
         fig_title='Q-learning: effect of $\epsilon$-greedy versus annealing $\epsilon$-greedy',
-        file_name=f'exploration_low_annealing_egreedy_g-{GAMMA}_lr-{LEARNING_RATE}.png'
+        file_name=f'exploration_low_annealing_egreedy_g-{GAMMA}_lr-{LEARNING_RATE}.png',
+        env=env
     )
 
     run_experiment_and_save_figure(
         policies=[BEST_SOFTMAX] + LOW_ANNEALING_SOFTMAX_POLICIES,
         fig_title='Q-learning: effect of softmax versus annealing softmax',
-        file_name=f'exploration_low_annealing_softmax_g-{GAMMA}_lr-{LEARNING_RATE}.png'
+        file_name=f'exploration_low_annealing_softmax_g-{GAMMA}_lr-{LEARNING_RATE}.png',
+        env=env
     )
     run_experiment_and_save_figure(
         policies=[BEST_EGREEDY] + MID_ANNEALING_EGREEDY_POLICIES,
         fig_title='Q-learning: effect of $\epsilon$-greedy versus annealing $\epsilon$-greedy',
-        file_name=f'exploration_mid_annealing_egreedy_g-{GAMMA}_lr-{LEARNING_RATE}.png'
+        file_name=f'exploration_mid_annealing_egreedy_g-{GAMMA}_lr-{LEARNING_RATE}.png',
+        env=env
     )
 
     run_experiment_and_save_figure(
         policies=[BEST_SOFTMAX] + MID_ANNEALING_SOFTMAX_POLICIES,
         fig_title='Q-learning: effect of softmax versus annealing softmax',
-        file_name=f'exploration_mid_annealing_softmax_g-{GAMMA}_lr-{LEARNING_RATE}.png'
+        file_name=f'exploration_mid_annealing_softmax_g-{GAMMA}_lr-{LEARNING_RATE}.png',
+        env=env
     )
     run_experiment_and_save_figure(
         policies=[BEST_EGREEDY] + HIGH_ANNEALING_EGREEDY_POLICIES,
         fig_title='Q-learning: effect of $\epsilon$-greedy versus annealing $\epsilon$-greedy',
-        file_name=f'exploration_high_annealing_egreedy_g-{GAMMA}_lr-{LEARNING_RATE}.png'
+        file_name=f'exploration_high_annealing_egreedy_g-{GAMMA}_lr-{LEARNING_RATE}.png',
+        env=env
     )
 
     run_experiment_and_save_figure(
         policies=[BEST_SOFTMAX] + HIGH_ANNEALING_SOFTMAX_POLICIES,
         fig_title='Q-learning: effect of softmax versus annealing softmax',
-        file_name=f'exploration_high_annealing_softmax_g-{GAMMA}_lr-{LEARNING_RATE}.png'
+        file_name=f'exploration_high_annealing_softmax_g-{GAMMA}_lr-{LEARNING_RATE}.png',
+        env=env
     )
 
 
 if __name__ == '__main__':
+    print('Exploration')
     experiment()
