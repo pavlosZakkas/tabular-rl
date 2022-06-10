@@ -9,7 +9,7 @@ By Thomas Moerland
 import time
 
 import numpy as np
-np.random.seed(42)
+np.random.seed(40)
 from ActionSelectionPolicy import ActionSelectionPolicy, AnnealingEGreedyPolicy, EGreedyPolicy
 from Environment import StochasticWindyGridworld
 from Helper import softmax, argmax
@@ -44,12 +44,12 @@ def monte_carlo(
   learning_rate,
   gamma,
   policy: ActionSelectionPolicy,
-  plot=True
+  plot=True,
+  env=StochasticWindyGridworld(initialize_model=False)
 ):
     ''' runs a single repetition of an MC rl agent
     Return: rewards, a vector with the observed rewards at each timestep ''' 
     
-    env = StochasticWindyGridworld(initialize_model=False)
     agent = MonteCarloAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
     times_reached_goal = 0
@@ -57,7 +57,6 @@ def monte_carlo(
     timestep = 0
     while timestep < n_timesteps:
         state = env.reset()
-        env.set_location_from(state)
 
         # play episode
         states, actions, timestep_rewards = [], [], []

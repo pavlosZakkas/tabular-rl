@@ -145,7 +145,6 @@ class QLearningSpec(unittest.TestCase):
   ):
     # given
     mocked_env = self.a_mocked_env()
-    mocked_windy_grid.return_value = mocked_env
     mocked_agent = self.a_mocked_agent()
     mocked_QLearningAgent.return_value = mocked_agent
 
@@ -156,12 +155,13 @@ class QLearningSpec(unittest.TestCase):
       self.GAMMA,
       policy=EGreedyPolicy(epsilon=self.EPSILON),
       plot=False,
+      env=mocked_env
     )
 
     # then
     expected_update_calls = [
                               mock.call(
-                                self.MOCKED_RANDOM_STATE,
+                                self.STATE_1,
                                 self.MOCKED_SELECTED_ACTION,
                                 self.MOCKED_REWARD,
                                 self.MOCKED_NEXT_STATE,
@@ -176,58 +176,28 @@ class QLearningSpec(unittest.TestCase):
                                 not self.DONE
                               )
                             ]
-
     self.assertEqual(mocked_agent.update.call_count, len(expected_update_calls))
     mocked_agent.update.assert_has_calls(expected_update_calls)
     np.testing.assert_array_equal(
       mocked_agent.Q_sa,
-      [[0., 0., self.TIMESTEPS - 1], [0., 0., 1.], [0., 0., 0.]]
+      [[0., 0., self.TIMESTEPS], [0., 0., 0.], [0., 0., 0.]]
     )
 
     self.assertEqual(rewards, [self.MOCKED_REWARD] * self.TIMESTEPS)
 
-  @mock.patch('Q_learning.QLearningAgent')
-  @mock.patch('Q_learning.StochasticWindyGridworld')
-  def should_stop_if_goal_state_is_reached(self, mocked_windy_grid, mocked_QLearningAgent):
-    # given
-    mocked_env = self.a_mocked_env(steps_to_reach_goal=self.STEPS_TO_REACH_GOAL)
-    mocked_windy_grid.return_value = mocked_env
-    mocked_agent = self.a_mocked_agent()
-    mocked_QLearningAgent.return_value = mocked_agent
-
-    # when
-    rewards = q_learning(
-      self.TIMESTEPS,
-      self.LEARNING_RATE,
-      self.GAMMA,
-      policy=EGreedyPolicy(self.EPSILON),
-      plot=False,
-    )
-
-    # then
-    self.assertEqual(mocked_agent.update.call_count, self.STEPS_TO_REACH_GOAL)
-    self.assertEqual(rewards, [self.MOCKED_REWARD] * self.STEPS_TO_REACH_GOAL)
-
   def a_mocked_env(self, steps_to_reach_goal=None):
-    def mocked_env_steps(steps_to_reach_goal):
-      for step in range(steps_to_reach_goal-1):
-        yield self.MOCKED_NEXT_STATE, self.MOCKED_REWARD, not self.DONE
-      yield self.MOCKED_NEXT_STATE, self.MOCKED_REWARD, self.DONE
+    def mocked_env_steps(action):
+      return self.MOCKED_NEXT_STATE, self.MOCKED_REWARD, not self.DONE
 
-    env_steps_generator = mocked_env_steps(
-      steps_to_reach_goal if steps_to_reach_goal != None
-      else self.TIMESTEPS
-    )
-
-    def mocked_env_steps(action, **kwargs):
-      return env_steps_generator.__next__()
+    def mocked_env_reset(**kwargs):
+      return self.STATE_1
 
     env = Mock()
     env.n_states = self.STATES
     env.n_actions = self.ACTIONS
 
-    env.set_location_from = Mock()
     env.step = Mock(side_effect=mocked_env_steps)
+    env.reset = Mock(side_effect=mocked_env_reset)
     return env
 
   def a_mocked_agent(self):
@@ -242,6 +212,5 @@ class QLearningSpec(unittest.TestCase):
       agent.Q_sa[state][action] += self.MOCKED_UPDATE
 
     agent.update.side_effect = mocked_update_agent_Q_sa
-    agent.a_random_state = Mock(return_value=self.MOCKED_RANDOM_STATE)
     agent.select_action = Mock(return_value=self.MOCKED_SELECTED_ACTION)
     return agent

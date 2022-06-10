@@ -8,8 +8,8 @@ By Thomas Moerland
 """
 
 import numpy as np
-np.random.seed(42)
-from ActionSelectionPolicy import ActionSelectionPolicy, EGreedyPolicy, AnnealingEGreedyPolicy
+np.random.seed(100)
+from ActionSelectionPolicy import ActionSelectionPolicy, EGreedyPolicy, AnnealingEGreedyPolicy, SoftMaxPolicy
 from Environment import StochasticWindyGridworld
 
 class NstepQLearningAgent:
@@ -59,12 +59,12 @@ def n_step_Q(
   gamma,
   policy: ActionSelectionPolicy,
   plot=True,
-  depth_n=5
+  depth_n=5,
+  env=StochasticWindyGridworld(initialize_model=False)
 ):
     ''' runs a single repetition of an MC rl agent
     Return: rewards, a vector with the observed rewards at each timestep '''
 
-    env = StochasticWindyGridworld(initialize_model=False)
     agent = NstepQLearningAgent(env.n_states, env.n_actions, learning_rate, gamma, depth_n)
     rewards = []
 
@@ -74,8 +74,7 @@ def n_step_Q(
         state = env.reset()
 
         # play episode
-        states, actions, timestep_rewards = [state], [], []
-        done = False
+        states, actions, timestep_rewards, done_flags = [state], [], [], []
 
         for episode_step in range(max_episode_length):
 
@@ -86,11 +85,12 @@ def n_step_Q(
             states.append(next_state)
             timestep_rewards.append(reward)
             rewards.append(reward)
+            done_flags.append(done)
 
             state = next_state
 
             if plot:
-                env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
+                env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.05)
 
             timestep += 1
             if done or timestep == n_timesteps:
@@ -106,30 +106,31 @@ def n_step_Q(
             n_states_plus_last_state = states[episode_step:episode_step + depth_n + 1]
             n_actions = actions[episode_step:episode_step + depth_n]
             n_timestep_rewards = timestep_rewards[episode_step:episode_step + depth_n]
+            done = done_flags[episode_step:episode_step + depth_n][-1]
 
             agent.update(n_states_plus_last_state, n_actions, n_timestep_rewards, done)
             if plot:
-                env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.1)
+                env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=0.3)
 
     print(f'Found goal state {times_reached_goal} times')
     return rewards
 
 def test():
     n_timesteps = 10000
-    max_episode_length = 100
+    max_episode_length = 10
     gamma = 1.0
     learning_rate = 0.1
     n = 5
 
     # Exploration
-    # policy = EGreedyPolicy(epsilon=0.1)
-    policy = AnnealingEGreedyPolicy(
-        timesteps=n_timesteps,
-        initial_epsilon=0.9,
-        final_epsilon=0.001,
-        steps_percentage=0.9
-    )
-    # policy = SoftMaxPolicy(temperature=1.0)
+    policy = EGreedyPolicy(epsilon=0.05)
+    # policy = AnnealingEGreedyPolicy(
+    #     timesteps=n_timesteps,
+    #     initial_epsilon=0.9,
+    #     final_epsilon=0.001,
+    #     steps_percentage=0.9
+    # )
+    policy = SoftMaxPolicy(temperature=1.0)
     # policy = AnnealingSoftMaxPolicy(
     #     timesteps=n_timesteps,
     #     initial_temperature=10,

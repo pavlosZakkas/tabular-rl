@@ -1,5 +1,5 @@
 import unittest
-from parameterized import parameterized, parameterized_class
+from parameterized import parameterized
 from mock import Mock
 import mock
 import numpy as np
@@ -150,3 +150,9 @@ class DynamincProgrammingSpec(unittest.TestCase):
         agent.update.side_effect = mocked_update_agent_Q_sa
 
         return agent
+
+    # def should_test(self):
+    #     env = self.a_mocked_env()
+    #     agent = Q_value_iteration(env, gamma=1.0, threshold=self.THRESHOLD)
+    #
+    #     assert agent.Q_sa == []

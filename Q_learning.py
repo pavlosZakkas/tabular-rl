@@ -30,12 +30,12 @@ def q_learning(
   learning_rate,
   gamma,
   policy: ActionSelectionPolicy,
-  plot=True
+  plot=True,
+  env=StochasticWindyGridworld(initialize_model=False)
 ):
     ''' runs a single repetition of q_learning
     Return: rewards, a vector with the observed rewards at each timestep '''
 
-    env = StochasticWindyGridworld(initialize_model=False)
     agent = QLearningAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
     # first_timestep = 0
@@ -58,17 +58,18 @@ def q_learning(
             times_reached_goal += 1
             state = env.reset()
 
+    env.render(Q_sa=agent.Q_sa, plot_optimal_policy=True, step_pause=100)
     print(f'Found goal state {times_reached_goal} times')
     return rewards
 
 def test():
 
-    n_timesteps = 1000
+    n_timesteps = 20000
     gamma = 1.0
     learning_rate = 0.1
 
     # Exploration
-    # policy = EGreedyPolicy(epsilon=0.1)
+    policy = EGreedyPolicy(epsilon=0.1)
     policy = AnnealingEGreedyPolicy(
         timesteps=n_timesteps,
         initial_epsilon=0.9,

@@ -35,12 +35,12 @@ def sarsa(
     learning_rate,
     gamma,
     policy: ActionSelectionPolicy,
-    plot=True
+    plot=True,
+    env=StochasticWindyGridworld(initialize_model=False)
 ):
     ''' runs a single repetition of SARSA
     Return: rewards, a vector with the observed rewards at each timestep ''' 
     
-    env = StochasticWindyGridworld(initialize_model=False)
     agent = SarsaAgent(env.n_states, env.n_actions, learning_rate, gamma)
     rewards = []
     times_reached_goal = 0
@@ -70,7 +70,7 @@ def sarsa(
 
 
 def test():
-    n_timesteps = 1000
+    n_timesteps = 50000
     gamma = 1.0
     learning_rate = 0.1
 
@@ -91,10 +91,10 @@ def test():
     # )
     
     # Plotting parameters
-    plot = True
+    plot = False
 
     rewards = sarsa(n_timesteps, learning_rate, gamma, policy, plot)
-    print("Obtained rewards: {}".format(rewards))        
+    print("Obtained rewards: {}".format(rewards))
     
 if __name__ == '__main__':
     test()
